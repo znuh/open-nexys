@@ -1,0 +1,4 @@
+- FPGA slave fifo VHDL code
+- Byte mode for InOut JTAG transfers
+- better JTAG protocol?
+- PSDRAM VHDL code
