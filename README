@@ -1,0 +1,2 @@
+use xilprg (http://code.google.com/p/xilprg-hunz/) on the host for the JTAG interface of the fx2fw
+the fx2 firmware also does slave fifo mode for full/hi speed usb transfers to/from the FPGA - VHDL code for the FPGA will follow
