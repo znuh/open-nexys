@@ -1,0 +1,17 @@
+net "switch<0>"  loc="N15";
+net "switch<1>"  loc="J16";
+net "switch<2>"  loc="K16";
+net "switch<3>"  loc="K15";
+net "switch<4>"  loc="L15";
+net "switch<5>"  loc="M16";
+net "switch<6>"  loc="M15";
+net "switch<7>"  loc="N16";
+net "led<0>" loc="L14";
+net "led<1>" loc="L13";
+net "led<2>" loc="M14";
+net "led<3>" loc="L12";
+net "led<4>" loc="N14";
+net "led<5>" loc="M13";
+net "led<6>" loc="P14";
+net "led<7>" loc="R16";
+
