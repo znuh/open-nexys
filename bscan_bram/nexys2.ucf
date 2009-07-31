@@ -1,0 +1,1 @@
+NET "sys_clk" LOC= "B8"; # Bank = 0 , Pin name = IP_L13P_0/GCLK8 , Type = GCLK , Sch name = GCLK0
