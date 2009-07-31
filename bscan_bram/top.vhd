@@ -28,7 +28,8 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 entity top is
-	port ( sys_clk: in std_logic );
+	port ( sys_clk: in std_logic;
+			 Led: out std_logic_vector(7 downto 0));
 end top;
 
 architecture Behavioral of top is
@@ -199,7 +200,8 @@ begin
 					ctl <= shift_in(39 downto 32);
 					addr <= shift_in(31 downto 16);
 					data_wr <= shift_in(15 downto 0);
-					ram_we <= ctl(0) and ctl(1);
+					ram_we <= shift_in(31);
+					Led <= shift_in(39 downto 32);
 			
 				elsif last_DRCK1 /= DRCK1 then
 				
