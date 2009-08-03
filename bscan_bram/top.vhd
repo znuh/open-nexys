@@ -35,11 +35,13 @@ end top;
 architecture Behavioral of top is
 	signal CAPTURE: std_logic;
 	signal UPDATE: std_logic;
+	signal UPDATE_sync: std_logic;
 	signal DRCK1: std_logic;
 	signal last_DRCK1: std_logic;
 	signal TDI: std_logic;
 	signal TDO1: std_logic;
 	signal SEL1: std_logic;
+	signal SEL1_sync: std_logic;
 	signal SHIFT: std_logic;
 	signal RESET: std_logic;
 	signal ctl: std_logic_vector(7 downto 0);
@@ -176,8 +178,6 @@ begin
       WEB => '0'       -- Port B Write Enable Input
    );
 
-	TDO1 <= shift_out(39);
-
 	process(sys_clk)
 	begin
 	
@@ -185,42 +185,63 @@ begin
 		
 			ram_we <= '0';
 			
-			last_DRCK1 <= DRCK1;
-			last_update <= UPDATE;
+			--last_DRCK1 <= DRCK1;
+			SEL1_sync <= SEL1;
+			
+			UPDATE_sync <= UPDATE;
+			last_update <= UPDATE_sync;
+			
+			if last_update = '0' and UPDATE_sync = '1' and SEL1_sync = '1' then
+				ctl <= shift_in(39 downto 32);
+				addr <= shift_in(31 downto 16);
+				data_wr <= shift_in(15 downto 0);
+				ram_we <= shift_in(32);
+				Led <= shift_in(39 downto 32);			
+			end if;
+			
+		end if;
+	end process;
+			
+	process(DRCK1)
+	begin
+	
+		if rising_edge(DRCK1) then
 			
 			if SEL1 = '1' then
 			
-				-- prepare data for output
-				if CAPTURE = '1' then
-					-- read ram
+				if SHIFT = '1' then
+					shift_in <= shift_in(38 downto 0) & TDI;
+					shift_out <= shift_out(38 downto 0) & '0';
+				else
 					shift_out <= ctl & addr & data_rd;
-					
-				-- got all data - prepare ram access
-				elsif last_update = '0' and UPDATE = '1' then
-					ctl <= shift_in(39 downto 32);
-					addr <= shift_in(31 downto 16);
-					data_wr <= shift_in(15 downto 0);
-					ram_we <= shift_in(31);
-					Led <= shift_in(39 downto 32);
-			
-				elsif last_DRCK1 /= DRCK1 then
-				
-					-- rising edge
-					if DRCK1 = '1' then
-						shift_in <= shift_in(38 downto 0) & TDI;
-						
-					-- falling edge
-					else
-						shift_out <= shift_out(38 downto 0) & "0";
-					end if;
-				
 				end if;
 			
-			end if; -- SEL1
-		
-		end if; -- rising edge
+			end if;
+			
+			--if SEL1 = '1' and SHIFT = '1' then
+				--shift_in <= shift_in(38 downto 0) & TDI;
+				--shift_out <= shift_out(38 downto 0) & '0';
+			--end if;
+			
+			--if SEL1 = '1' and CAPTURE = '1' then
+				--shift_out <= ctl & addr & data_rd;
+			--end if;
+			
+		end if;
 	
 	end process;
+
+	--process(DRCK1)
+	--begin
+	
+--		if falling_edge(DRCK1) and SHIFT='1' and SEL1='1' then
+	--		shift_out <= shift_out(38 downto 0) & '0';
+		--	TDO1 <= shift_out(38);
+		--end if;
+	
+	--end process;
+
+	TDO1 <= shift_out(39);
 
 end Behavioral;
 
