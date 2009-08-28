@@ -26,13 +26,30 @@
 
 #include "syncdelay.h"
 
-extern unsigned char _usb_config;
+void power_init() {
 
-// mosfet for power enable
-#define USB_ON	(1<<7) // PD7
+	/* pin 7 of port d connected to mosfet gate controlling the board power
+	 * ref: http://digilentinc.com/Data/Products/NEXYS/Nexys_sch.pdf
+	 */
+	
+	/* configure pin 7 of port d as output */
+	OED |= (1<<7);
+	//SYNCDELAY;
 
-// VCC3V3 detect
-#define VCC3V3_OK	(1<<1) // PA1
+}
+
+void toggle_power() {
+
+	/* toggle high/low state of the mosfet gate */
+
+	if((IOD&(1<<7)))
+		IOD&=~(1<<7);
+	else
+		IOD|=(1<<7);
+
+	//SYNCDELAY;
+
+}
 
 /* jtag pins:
  * tdo - pin 0 (input)
@@ -49,32 +66,22 @@ extern unsigned char _usb_config;
 #define	CMD_JTAG_LAST		0x04
 #define	CMD_JTAG_TDO		0x02
 
+void jtag_init() {
+
+	/* pin 5 of port d disables tdi -> tdo forward */
+	OED|=(1<<5);
+	IOD|=(1<<5);
+
+	/* set JTAG in/outputs */
+	OED |= (TDI_ | TCK_ | TMS_);
+	OED &= ~TDO_;
+
+	/* set them low */
+	IOD &= ~(TCK_ | TMS_ | TDI_);
+}
+
 typedef BYTE u8;
 typedef WORD u16;
-
-// TODO: enable only during actual programming!
-void jtag_init(u8 enable) {
-
-	if(enable) {
-		
-		/* pin 5 of port d disables tdi -> tdo forward */
-		OED|=(1<<5); // TODO
-		IOD|=(1<<5);
-
-		/* set JTAG in/outputs */
-		OED |= (TDI_ | TCK_ | TMS_);
-		OED &= ~TDO_;
-
-		/* set them low */
-		IOD &= ~(TCK_ | TMS_ | TDI_);
-		
-	}
-	else {
-		// disable jtag output
-		OED = USB_ON;
-		IOD &= USB_ON;
-	}
-}
 
 void set_tms(u8 val) {
 	if(val)
@@ -542,95 +549,40 @@ void slave_fifo_init(void) {
 
 void main(void)
 {
-	u8 pwr_ok=0;
-	u8 usb_ok=0;
-	
   EA = 0; // disable all interrupts
 
   /* run with 48Mhz */
   CPUCS = (CPUCS & 0x18) | 0x10;
 
   nexys_init();
-
   setup_autovectors ();
   usb_install_handlers ();
+
 
   EA = 1; // enable interrupts
 
   fx2_renumerate(); // simulates disconnect / reconnect
 	
-	//jtag_init();
+	jtag_init();
 	
-	//usb_ep1_init();
+	usb_ep1_init();
 
-	/* pin 7 of port d connected to mosfet gate controlling the board power
-	 * ref: http://digilentinc.com/Data/Products/NEXYS/Nexys_sch.pdf
-	 * same holds for Nexys2 board
-	 */
-	/* configure pin 7 of port d as output */
-	IOD &= ~USB_ON; // initial: off
-	OED |= USB_ON;
-	
+	power_init();
+	toggle_power();	
+
 	// wait a bit to get the HISPEED flag right
-	//while(!usb_setup_packet_avail()) {}
+	while(!usb_setup_packet_avail()) {}
 	
-//	slave_fifo_init();
-	
-	
-	
-	/*
-		TODO:
-			- stall EP1 if pwr or usb down
-			- init EP1 if pwr up and usb up
-			
-			- initialize slave fifo once pwr+usb is ready
-			- disable slave fifo on power cut or usb down
-	*/
-	
+	slave_fifo_init();
+		
   while(1) {
-
-	// most important: please the host!
-	if(usb_setup_packet_avail())
+      if(usb_setup_packet_avail())
           usb_handle_setup_packet();  
-	
-	// enable USB PWR via mosfet once we're configured
-	// (permission to burn 500mA yay!)
-	if(usb_ok != _usb_config) {
-		usb_ok = _usb_config;
-		
-		if(!usb_ok) {
-			// this case doesn't happen as _usb_config is never reset!
-			// otherwise we'd do: tristate slave fifo & pwr, mosfet power off
-			//IOD |= USB_ON; // disable mosfet
-		}
-		else {
-			IOD |= USB_ON; // enable mosfet
-			if(pwr_ok) {
-				usb_ep1_init(); // setup JTAG endpoint
-				jtag_init(1);
-			}
-		}
-	}
-	  
-	// check power switch
-	if(pwr_ok != (IOA & VCC3V3_OK)) {
-		
-		pwr_ok = (IOA & VCC3V3_OK);
-		
-		if(!pwr_ok) {
-			// disable/tristate slave fifo, jtag
-			IFCONFIG &= ~3;
-			OEA = 0;
-			OEB = 0;
-			jtag_init(0);
-		}
-		else if(usb_ok) {
-			usb_ep1_init(); // setup JTAG endpoint
-			jtag_init(1);
-		}
-	}
       
-      if( (usb_ok) && (pwr_ok) )
-	usb_ep1_process_request();
+      usb_ep1_process_request();
   }
 }
+
+
+
+
