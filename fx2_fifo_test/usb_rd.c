@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <assert.h>
 
+// compile with gcc -Wall -lusb -o usb_rd usb_rd.c
+
 static usb_dev_handle *handle;
 
 #define USB_VENDOR_ID 0x4711
@@ -84,7 +86,7 @@ int main(int argc, char **argv)
 	init();
 
 	while(1) {
-		ret = usb_bulk_read(handle, 0x86, response, 1024, 1000);
+		ret = usb_bulk_read(handle, 0x86, (char*)response, 1024, 1000);
 		printf("%d\n",ret);
 		for(cnt=0;cnt<ret;cnt++) {
 			if(response[cnt] != ((last+1)&0xff))
