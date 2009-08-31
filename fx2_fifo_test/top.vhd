@@ -113,6 +113,8 @@ begin
 	fx2_slrd_o <= '1';
 	fx2_sloe_o <= '1';
 	
+	fx2_slwr_o <= fx2_wr;
+	
 	Led <= fx2_wr & (not fx2_wr_full_i) & fx2_wasfull & fx2_stop_on_full & fx2_no_delay & "000";
 	
 	process(fx2_clk_i)
@@ -120,17 +122,16 @@ begin
 		if rising_edge(fx2_clk_i) then
 			
 			-- FX2 default signals
-			fx2_slwr_o <= '1';
 			fx2_data_io <= (others => 'Z');
 			fx2_pktend_o <= '1';
-			fx2_wr <= '0';
+			fx2_wr <= '1';
 			
 			if fx2_wr_full_i = '0' then
 				fx2_wasfull <= '1';
 			end if;
 			
 			-- did a write cycle
-			if fx2_wr = '1' then
+			if fx2_wr = '0' then
 							
 				if fx2_wr_full_i = '1' and fx2_wasfull = '0' then
 					fx2_notfull_cnt <= fx2_notfull_cnt + 1;
@@ -154,12 +155,11 @@ begin
 			if delay_cnt /= "000" then
 				delay_cnt <= delay_cnt - 1;
 			elsif fx2_wr_cnt /= x"0000" or autostop = '0' then
-				if (run = '1') and (fx2_wr = '0' or fx2_no_delay = '1') then
+				if (run = '1') and (fx2_wr = '1' or fx2_no_delay = '1') then
 					if (fx2_wr_full_i = '1' or fx2_last_full = '1' or fx2_stop_on_full = '0') then
 						fx2_data_io <= fx2_dout;
 						fx2_dout <= fx2_dout + 1;
-						fx2_slwr_o <= '0';
-						fx2_wr <= '1';
+						fx2_wr <= '0';
 						fx2_wr_cnt <= fx2_wr_cnt - 1;	
 					end if;
 				end if;
@@ -179,8 +179,8 @@ begin
 					when x"80" => 	fx2_stop_on_full <= dout(0);
 										fx2_no_delay <= dout(1);
 										-- some kind of raw mode...
-										fx2_slwr_o <= not dout(2);
-										fx2_wr <= dout(3);
+										fx2_wr <= not dout(2);
+										
 										fx2_pktend_o <= not dout(4);
 										autostop <= not dout(5);
 										delay <= dout(11 downto 8);
