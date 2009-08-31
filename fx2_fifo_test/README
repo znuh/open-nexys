@@ -1,0 +1,16 @@
+
+FX2 slave fifo test code - control via JTAG / USER1
+
+xilprg usage: user 1 1 xxyyyy
+
+xx & 0x80: write - else read
+xx & 0x7f: register
+yyyy     : value
+
+example to send 1024 bytes to the host:
+---------------------------------------
+
+user 1 1 800002 -> no delay between write cycles, don't stop on full
+user 1 1 810400 -> do 1024 write cycles
+-> now start usb_rd and press button 0 -> you should get (0..ff)x4
+
