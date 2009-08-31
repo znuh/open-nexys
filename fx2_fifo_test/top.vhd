@@ -72,6 +72,8 @@ end component;
 	signal run : std_logic := '0';
 	signal autostop : std_logic := '1';
 	signal fx2_last_full : std_logic;
+	signal delay : std_logic_vector(3 downto 0);
+	signal delay_cnt : std_logic_vector(3 downto 0);
 begin
 
    BSCAN_SPARTAN3_inst : BSCAN_SPARTAN3
@@ -143,8 +145,15 @@ begin
 			
 			fx2_last_full <= fx2_wr_full_i;
 			
+			-- insert delay after frame
+			if fx2_last_full = '1' and fx2_wr_full_i = '0' then
+				delay_cnt <= delay;
+			end if;
+
 			-- write?
-			if fx2_wr_cnt /= x"0000" or autostop = '0' then
+			if delay_cnt /= "000" then
+				delay_cnt <= delay_cnt - 1;
+			elsif fx2_wr_cnt /= x"0000" or autostop = '0' then
 				if (run = '1') and (fx2_wr = '0' or fx2_no_delay = '1') then
 					if (fx2_wr_full_i = '1' or fx2_last_full = '1' or fx2_stop_on_full = '0') then
 						fx2_data_io <= fx2_dout;
@@ -174,7 +183,8 @@ begin
 										fx2_wr <= dout(3);
 										fx2_pktend_o <= not dout(4);
 										autostop <= not dout(5);
-										
+										delay <= dout(11 downto 8);
+				
 					-- FX2 status
 					when x"00" => 	din(7 downto 0) <= "000000" & fx2_wr_full_i & fx2_rd_empty_i;
 					
