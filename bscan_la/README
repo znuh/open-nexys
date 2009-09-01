@@ -6,12 +6,19 @@ there's no GUI yet, just some dirty tricks:
 1) you need xilprg from http://code.google.com/p/xilprg-hunz/
 
 2) you have to configure the LA "raw" via xilprg with the user cmd
+
   5 byte data, (4 byte params + 1 byte (LSB) cmd)
+  see http://www.sump.org/projects/analyzer/protocol/ for details
+
   example:
+  --------
   user 1 1 0000000000 <- reset
-  user 1 1 08000000c2 <- set trigger capture to immediate
-  user 1 1 00ff00ff81 <- grab 1024 samples?
+  user 1 1 00000fffc0 <- trigger  mask: fff
+  user 1 1 00000000c1 <- trigger value: 000
+  user 1 1 08000000c2 <- trigger fire on match
+  user 1 1 0080010081 <- 256(*4) samples, trigger @128
   user 1 1 0000000001 <- run
+  user 1 1 000000007f <- dummy read
 
 3) dump the data after trigger using xilprg:
   la 1 1 blah.dump
