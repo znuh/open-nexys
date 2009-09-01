@@ -44,7 +44,10 @@ entity la is
 		xtalClock : in std_logic;
 
 		exClock : in std_logic;
-		input : in std_logic_vector(31 downto 0)
+		input : in std_logic_vector(31 downto 0);
+		Led : out std_logic_vector(7 downto 0);
+		sw : in std_logic_vector(7 downto 0);
+		btn : in std_logic_vector(3 downto 0)
 	);
 end la;
 
@@ -162,6 +165,8 @@ begin
 		strobe_o => strobe
 	);
 	
+	Led <= send & busy & "000000";
+	
 	-- JTAG
 	process(clock)
 	begin
@@ -176,8 +181,10 @@ begin
 				
 				cmd <= dout;
 			
+				din(39) <= '0';
+			
 				if dout(7 downto 0) = x"02" then
-					din <= x"00534c4131";
+					din <= x"80534c4131";
 				else
 					execute <= '1';
 				end if;
@@ -186,10 +193,9 @@ begin
 			
 			-- TODO: this isn't safe yet!
 			-- TODO: output -> din on strobe = '1'
-			-- TODO: new data indicator in din (clear with strobe='1')
-			if write = '1' then
+			if send = '1' then
 				busy <= '1';
-				din <= x"00" & output;
+				din <= x"80" & output;
 			end if;
 			
 		end if;
@@ -216,7 +222,7 @@ begin
 	end process;
 	
 	-- probeInput <= input;
-	probeInput <= test_counter(40 downto 9); -- use this to connect a counter to the inputs
+	probeInput <= test_counter(31 downto 0); -- use this to connect a counter to the inputs
 	
 	Inst_clockman: clockman PORT MAP(
 		clkin => xtalClock,
