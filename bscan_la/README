@@ -1,0 +1,25 @@
+JTAG accessible Logic Analyzer 
+based on sump.org LA: http://www.sump.org/projects/analyzer/
+
+there's no GUI yet, just some dirty tricks:
+
+1) you need xilprg from http://code.google.com/p/xilprg-hunz/
+
+2) you have to configure the LA "raw" via xilprg with the user cmd
+  5 byte data, (4 byte params + 1 byte (LSB) cmd)
+  example:
+  user 1 1 0000000000 <- reset
+  user 1 1 08000000c2 <- set trigger capture to immediate
+  user 1 1 00ff00ff81 <- grab 1024 samples?
+  user 1 1 0000000001 <- run
+
+3) dump the data after trigger using xilprg:
+  la 1 1 blah.dump
+
+4) convert the dump to a VCD file using the dump2vcd.pl script of xilprg:
+  ./dump2vcd.pl blah.dump null:16,count:16 > blah.vcd
+  2nd argument is: wire(s)_name:#wires,wire(s)_name:#wires...
+  wire_name "null" is special - those wires will be ignored!
+
+5) view the VCD file using gtkwave: gtkwave blah.vcd
+
