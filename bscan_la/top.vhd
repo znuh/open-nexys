@@ -176,7 +176,7 @@ begin
 				
 				cmd <= dout;
 			
-				if dout(7 downto 0) /= x"02" then
+				if dout(7 downto 0) = x"02" then
 					din <= x"00534c4131";
 				else
 					execute <= '1';
