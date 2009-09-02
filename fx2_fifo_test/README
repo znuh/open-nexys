@@ -1,6 +1,8 @@
 
 FX2 slave fifo test code - control via JTAG / USER1
 
+top_with_la is the version with builtin logic analyzer - you need the LA code from bscan_la as well! LA is connected to USER2 ! 
+
 xilprg usage: user 1 1 xxyyyy
 
 xx & 0x80: write - else read
