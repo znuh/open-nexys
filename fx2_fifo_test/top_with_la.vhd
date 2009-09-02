@@ -3,9 +3,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
--- version with integrated logic analyzer (connected to USER2)
--- needs the code from bscan_la as well!
-
 ---- Uncomment the following library declaration if instantiating
 ---- any Xilinx primitives in this code.
 library UNISIM;
@@ -91,6 +88,7 @@ end component;
 	signal run : std_logic := '0';
 	signal autostop : std_logic := '1';
 	signal fx2_last_full : std_logic;
+	signal fx2_one_left : std_logic;
 	signal delay : std_logic_vector(3 downto 0);
 	signal delay_cnt : std_logic_vector(3 downto 0);
 	
@@ -146,7 +144,7 @@ begin
 		strobe_o => strobe
 	);
 
-	la_input <= x"00000" & "0" & fx2_wr_full_i & fx2_wasfull & fx2_wr & fx2_data_io;
+	la_input <= x"00000" & fx2_one_left & fx2_wr_full_i & fx2_wasfull & fx2_wr & fx2_data_io;
 
 	fx2_fifo_addr_o <= "10";
 	
@@ -157,7 +155,7 @@ begin
 	
 	fx2_slwr_o <= fx2_wr;
 	
-	Led <= fx2_wr & (not fx2_wr_full_i) & fx2_wasfull & fx2_stop_on_full & fx2_no_delay & "000";
+	Led <= fx2_wr & (not fx2_wr_full_i) & fx2_wasfull & fx2_stop_on_full & fx2_no_delay & "00" & fx2_one_left;
 	
 	process(fx2_clk_i)
 	begin
@@ -192,13 +190,20 @@ begin
 			if fx2_last_full = '1' and fx2_wr_full_i = '0' then
 				delay_cnt <= delay;
 			end if;
+			
+			-- detect rare "full though one left" "corner condition"
+			if fx2_wr = '1' and fx2_last_full = '1' and fx2_wr_full_i = '0' then
+				fx2_one_left <= '1';
+			end if;
 
 			-- write?
 			if delay_cnt /= "000" then
 				delay_cnt <= delay_cnt - 1;
 			elsif fx2_wr_cnt /= x"0000" or autostop = '0' then
 				if (run = '1') and (fx2_wr = '1' or fx2_no_delay = '1') then
-					if (fx2_wr_full_i = '1' or fx2_last_full = '1' or fx2_stop_on_full = '0') then
+					--if (fx2_wr_full_i = '1' or fx2_last_full = '1' or fx2_stop_on_full = '0') then
+					if (fx2_wr_full_i = '1' or fx2_one_left = '1' or fx2_stop_on_full = '0') then
+						fx2_one_left <= '0';
 						fx2_data_io <= fx2_dout;
 						fx2_dout <= fx2_dout + 1;
 						fx2_wr <= '0';

@@ -95,8 +95,8 @@ int main(int argc, char **argv)
 		}
 		
 		if(ret>0) {
-			hexdump(response,ret);
-			printf("\n");
+	//		hexdump(response,ret);
+	//		printf("\n");
 			//fflush(stdout);
 		}
 		
