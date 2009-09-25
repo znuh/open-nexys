@@ -23,7 +23,8 @@ entity fx2_usb is
 		rd_en : in std_logic;
 		wr_full : out std_logic;
 		rd_empty : out std_logic;
-		pktend_i : in std_logic
+		pktend_i : in std_logic;
+		sync : out std_logic
 	);
 end fx2_usb;
 
@@ -42,19 +43,38 @@ component tiny_fifo
 end component;
 
 	signal tx_dout : std_logic_vector(7 downto 0);
-	signal tx_empty, rx_full : std_logic;
+	signal tx_empty, rx_full, rx_empty : std_logic;
 	signal tx_rd_en, rx_wr_en : std_logic;
 	type mode is (IDLE, RD, DELAY, PKTEND);
 	signal state : mode;
 	signal tx_fifo_selected : std_logic;
-		
+	
 	signal pktend_r1 : std_logic;
 	signal pktend_r2 : std_logic;
 	signal pktend_r3 : std_logic;
 	signal pktend_pending : std_logic;
 	
 	signal pktend_delay : integer;
+	
+	signal fx2_rx_empty_r1 : std_logic;
+	signal fx2_rx_empty_r2 : std_logic;
 begin
+
+	process(clk_i)
+	begin
+		if rising_edge(clk_i) then
+			if rst_i = '1' then
+				sync <= '0';
+			else
+				sync <= '0';
+				fx2_rx_empty_r1 <= fx2_rd_empty_i;
+				fx2_rx_empty_r2 <= fx2_rx_empty_r1;
+				if fx2_rx_empty_r2 = '0' and rx_empty = '1' then
+					sync <= '1';
+				end if;
+			end if;
+		end if;
+	end process;
 
 	fx2_slcs_o <= '0';
 
@@ -77,7 +97,7 @@ begin
 			if pktend_r3 = '0' and pktend_r2 = '1' then
 				pktend_pending <= '1';
 			end if;
-									
+			
 			rx_wr_en <= '0';
 			tx_rd_en <= '0';
 			
@@ -152,8 +172,10 @@ begin
 			wr_clk => fx2_clk_i,
 			wr_en => rx_wr_en,
 			dout => dout,
-			empty => rd_empty,
+			empty => rx_empty,
 			full => rx_full);
+			
+	rd_empty <= rx_empty;
 
 	tx_fifo : tiny_fifo
 		port map (

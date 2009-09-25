@@ -47,7 +47,8 @@ component fx2_usb is
 		rd_en : in std_logic;
 		wr_full : out std_logic;
 		rd_empty : out std_logic;
-		pktend_i : in std_logic
+		pktend_i : in std_logic;
+		sync : out std_logic
 	);
 end component;
 
@@ -69,6 +70,7 @@ COMPONENT mydcm
 	signal usb_din, usb_dout : std_logic_vector(7 downto 0);
 	signal usb_wr_en, usb_rd_en : std_logic;
 	signal usb_wr_full, usb_rd_empty : std_logic;
+	signal sync : std_logic;
 begin
 
 	JC <= x"0";
@@ -77,7 +79,8 @@ begin
 	rst <= btn(0);
 	usb_pktend <= btn(1);
 	
-	Led <= usb_wr_en & usb_rd_en & usb_wr_full & usb_rd_empty & x"0";
+	Led(7 downto 1) <= usb_wr_en & usb_rd_en & usb_wr_full & usb_rd_empty & "000";
+	Led(0) <= not sync;
 
 -------- reply code---------
 	usb_din <= usb_dout;
@@ -139,7 +142,8 @@ begin
 		rd_en => usb_rd_en,
 		wr_full => usb_wr_full,
 		rd_empty => usb_rd_empty,
-		pktend_i => usb_pktend
+		pktend_i => usb_pktend,
+		sync => sync
 		);
 
 end Behavioral;
