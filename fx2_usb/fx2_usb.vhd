@@ -115,7 +115,7 @@ begin
 					when IDLE =>
 					
 						-- pktend?
-						if fx2_wr_full_i = '1' and pktend_pending = '1' then
+						if fx2_wr_full_i = '1' and tx_empty = '1' and pktend_pending = '1' then
 							pktend_pending <= '0';
 							pktend_delay <= 4;
 							tx_fifo_selected <= '1';
