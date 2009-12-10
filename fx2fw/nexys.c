@@ -458,10 +458,10 @@ void slave_fifo_init(void) {
 	// 6: 	 1: 48MHz
 	// 5:	 1: clk out enable
 	// 4: 	 0: no clk inversion
-	// 3:    0: synchronous mode
+	// 3:    1: asynchronous mode
 	// 2:	 0: don't drive GSTATE
 	// 0,1: 11: slave fifo
-	IFCONFIG = 0xe3;
+	IFCONFIG = 0xeb;
 	SYNCDELAY;
 	
 	// ep 2 (out)
@@ -492,13 +492,13 @@ void slave_fifo_init(void) {
 
 	// 7: 0: nothing
 	// 6: 0: in full minus 1
-	// 5: 1: out empty plus one
+	// 5: 0: out empty plus one
 	// 4: 1: outout
 	// 3: 0: outoin
 	// 2: 0: zero len in
 	// 1: 0: nothing
 	// 0: 0: 8bit		
-	EP2FIFOCFG = 0x30;
+	EP2FIFOCFG = 0x10;
 	SYNCDELAY;
 	
 	// ep 6 (in)
@@ -522,14 +522,14 @@ void slave_fifo_init(void) {
 	SYNCDELAY;
 
 	// 7: 0: nothing
-	// 6: 1: in full minus 1
+	// 6: 0: in full minus 1
 	// 5: 0: out empty plus one
 	// 4: 0: outout
 	// 3: 1: outoin
 	// 2: 1: zero len in
 	// 1: 0: nothing
 	// 0: 0: 8bit		
-	EP6FIFOCFG = 0x4C;
+	EP6FIFOCFG = 0x0C;
 	SYNCDELAY;
 	
 	EP6AUTOINLENH = HISPEED ? 2 : 0;
