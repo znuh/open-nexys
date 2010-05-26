@@ -59,4 +59,4 @@ clean:
 distclean: clean
 
 load: nexys.hex
-	sudo fxload -I nexys.hex -t fx2 -v -D /proc/bus/usb/`lsusb | grep CY7C68013 | sed s/:.*// | sed s/Bus\ // | sed s/\ Device\ /\\\//`
+	sudo fxload -I nexys.hex -t fx2 -v -D /dev/bus/usb/`lsusb | grep CY7C68013 | sed s/:.*// | sed s/Bus\ // | sed s/\ Device\ /\\\//` || sudo fxload -I nexys.hex -t fx2 -v -D /prob/bus/usb/`lsusb | grep CY7C68013 | sed s/:.*// | sed s/Bus\ // | sed s/\ Device\ /\\\//`
